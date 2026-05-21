@@ -29,9 +29,39 @@ export function AddScanForm({ onAdd }: { onAdd: (s: Scan) => void }) {
   return (
     <form onSubmit={submit} className="surface p-4">
       <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">Add new scan</div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded border border-line px-2 py-1" />
-        <input type="number" value={tsi} onChange={(e) => setTsi(Number(e.target.value))} min={0.5} max={99.9} step={0.1} className="rounded border border-line px-2 py-1" />
+      <div className="mt-3 flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="add-scan-date" className="text-[11px] text-text-muted">
+            Scan date
+          </label>
+          <input
+            id="add-scan-date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full rounded border border-line px-2 py-1"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="add-scan-tsi" className="text-[11px] text-text-muted">
+            Tibial Stiffness Index — TSI{" "}
+            <span className="text-text-faint">(0.5 – 99.9 %)</span>
+          </label>
+          <input
+            id="add-scan-tsi"
+            type="number"
+            value={tsi}
+            onChange={(e) => setTsi(Number(e.target.value))}
+            min={0.5}
+            max={99.9}
+            step={0.1}
+            placeholder="e.g. 65.0"
+            className="w-full rounded border border-line px-2 py-1"
+          />
+          <p className="text-[10.5px] text-text-faint">
+            80 % or above = safe for full weight-bearing
+          </p>
+        </div>
       </div>
       <div className="mt-3 flex gap-2">
         <Button type="submit" variant="primary" disabled={adding}>Add scan</Button>

@@ -2,7 +2,6 @@ const MEMBERS = [
   { name: "Yashas N",                department: "AI & Data Science",      role: "Software & AI" },
   { name: "Jeeth Kataria",           department: "AI & Data Science",      role: "Hardware & DSP" },
   { name: "Naveen G Patil",          department: "AI & Machine Learning",  role: "ML Engineering" },
-  { name: "Project Member",          department: "TBD",                    role: "Clinical Studies" },
 ];
 
 const GUIDE = {
@@ -23,7 +22,7 @@ export function LandingTeam() {
             Built at Ramaiah Institute of Technology.
           </h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {MEMBERS.map((m) => <Member key={m.name} {...m} />)}
         </div>
         <div className="mt-6">
