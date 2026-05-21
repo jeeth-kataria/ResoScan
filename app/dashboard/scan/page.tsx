@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Play, RotateCcw, Activity, ChevronRight, Stethoscope, Microscope } from "lucide-react";
+import { toast } from "sonner";
 
 import { getPatient, latestScan } from "@/lib/patients";
 import { predict, predictionHeadline } from "@/lib/prediction";
@@ -40,18 +41,41 @@ export default function ScanPage() {
 
 function ScanPageInner() {
   const params = useSearchParams();
-  const initialPatient = getPatient(params.get("p") ?? "arjun");
-  const [patient, setPatient] = useState(initialPatient);
-  const [highlightRange, setHighlightRange] = useState<{fromWeek:number;toWeek:number} | null>(null);
+  const patientKey = params.get("p") ?? "arjun";
+  const [patient, setPatient] = useState(() => getPatient(patientKey));
 
-  const [scanParams, setScanParams] = useState<ScanParams>(() => paramsFromPatient(patient));
+  // Initialize highlight range to first→last scan so the timeline shows context immediately
+  const [highlightRange, setHighlightRange] = useState<{fromWeek:number;toWeek:number} | null>(() => {
+    const p = getPatient(patientKey);
+    if (p.scans.length < 2) return null;
+    const sorted = p.scans.slice().sort((a,b) => a.date.localeCompare(b.date));
+    return { fromWeek: sorted[0].week, toWeek: sorted[sorted.length - 1].week };
+  });
+
+  const [scanParams, setScanParams] = useState<ScanParams>(() => paramsFromPatient(getPatient(patientKey)));
   const [progress, setProgress] = useState(1);
   const [scanning, setScanning] = useState(false);
+  const [lastScannedAt, setLastScannedAt] = useState<string | null>(null);
   const rafRef = useRef<number | null>(null);
+  // Ref to always read the latest shape inside the RAF tick without stale closure
+  const latestShapeRef = useRef<ReturnType<typeof buildScan> | null>(null);
+
+  // Keep patient in sync with URL — fixes the patient-switch bug
+  useEffect(() => {
+    const fromUrl = getPatient(patientKey);
+    setPatient(fromUrl);
+  }, [patientKey]);
 
   // Re-seed params when patient changes
   useEffect(() => {
     setScanParams(paramsFromPatient(patient));
+    // reset highlight range to full span for the new patient
+    if (patient.scans.length >= 2) {
+      const sorted = patient.scans.slice().sort((a,b) => a.date.localeCompare(b.date));
+      setHighlightRange({ fromWeek: sorted[0].week, toWeek: sorted[sorted.length - 1].week });
+    } else {
+      setHighlightRange(null);
+    }
     // restart scan animation
     setProgress(0);
     const t = setTimeout(startScan, 80);
@@ -61,6 +85,8 @@ function ScanPageInner() {
 
   // Derive everything from scanParams
   const shape = useMemo(() => buildScan(scanParams), [scanParams]);
+  // Keep a ref synced so the RAF tick can read the latest shape without stale closure
+  latestShapeRef.current = shape;
   const pred = useMemo(() => predict(patient), [patient]);  // days-to-walk stays patient-driven
   const headline = predictionHeadline(pred);
   const last = latestScan(patient);
@@ -81,8 +107,26 @@ function ScanPageInner() {
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / SCAN_DURATION_MS);
       setProgress(t);
-      if (t < 1) rafRef.current = requestAnimationFrame(tick);
-      else setScanning(false);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        setScanning(false);
+        // Record timestamp when scan completes
+        const now2 = new Date();
+        const timeStr = now2.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        setLastScannedAt(timeStr);
+        // Show a completion toast — driven by latest shape metrics
+        // We read the latest shape via a ref to avoid stale closure
+        const latestShape = latestShapeRef.current;
+        if (latestShape) {
+          const { tsi, classification, trafficLight } = latestShape.metrics;
+          const toneIcon = trafficLight === "green" ? "✅" : trafficLight === "amber" ? "⚠️" : "🔴";
+          toast(`${toneIcon} Scan complete — TSI ${tsi.toFixed(1)}%`, {
+            description: `${classification} · ${timeStr}`,
+            duration: 3500,
+          });
+        }
+      }
     };
     rafRef.current = requestAnimationFrame(tick);
   }
@@ -130,6 +174,17 @@ function ScanPageInner() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
+
+      {/* ============================ ONBOARDING HINT ============================ */}
+      <div className="flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
+        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-[#001619]">1</span>
+        <p className="text-[13px] leading-relaxed text-text-muted">
+          <span className="font-semibold text-text">Start here —</span>{" "}
+          select a patient from the top-right picker, then press{" "}
+          <span className="font-semibold text-accent">Run scan</span> to simulate a live resonance scan.
+          Use the sliders below to explore how bone healing changes the signal in real time.
+        </p>
+      </div>
 
       {/* ============================ TOP STRIP ============================ */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
@@ -235,8 +290,11 @@ function ScanPageInner() {
             </div>
             <WaveformStrip shape={shape} progress={progress} />
             <div className="mt-2 flex items-center justify-between border-t border-line pt-2">
-              <div className="font-mono text-[11px] text-text-faint">
-                Scan #{patient.scans.length.toString().padStart(2,"0")} · 2.2 s · 20–1100 Hz sweep
+              <div className="font-mono text-[11px] text-text-faint flex items-center gap-3">
+                <span>Scan #{patient.scans.length.toString().padStart(2,"0")} · 2.2 s · 20–1100 Hz sweep</span>
+                {lastScannedAt && !scanning && (
+                  <span className="text-accent/70">· scanned {lastScannedAt}</span>
+                )}
               </div>
               <button
                 onClick={startScan}
@@ -362,15 +420,13 @@ function ScanPageInner() {
           <AiAssessment shape={shape} />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
-          <div>
+        <section className="flex flex-wrap gap-4 items-start">
+          <div className="min-w-[240px]">
             <DateRangeSelector scans={patient.scans} onChange={(f,t)=>setHighlightRange({fromWeek:f,toWeek:t})} />
-            <div className="mt-3">
-              <ExportControls patient={patient} shape={shape} />
-            </div>
           </div>
-          <div />
-          <div />
+          <div className="min-w-[240px]">
+            <ExportControls patient={patient} shape={shape} currentWeek={scanParams.week} />
+          </div>
       </section>
 
       {/* ============================ METRICS + EXTRAS ============================ */}

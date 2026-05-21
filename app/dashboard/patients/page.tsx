@@ -264,8 +264,8 @@ function LargeCompare({ patient }: { patient: Patient }) {
   const to = scans[toIdx] ?? scans[scans.length - 1];
   const summary = computeImprovementBetween(from, to);
 
-  const fromShape = buildScan({ callusPct: from.tsiPct, pressureN: from.pressureN ?? 3.5, implantLoose: !!from.implantLoose, week: from.week, fHealthy: 850 });
-  const toShape = buildScan({ callusPct: to.tsiPct, pressureN: to.pressureN ?? 3.5, implantLoose: !!to.implantLoose, week: to.week, fHealthy: 850 });
+  const fromShape = buildScan({ callusPct: from.tsiPct, pressureN: 3.5, implantLoose: false, week: from.week, fHealthy: 850 });
+  const toShape = buildScan({ callusPct: to.tsiPct, pressureN: 3.5, implantLoose: false, week: to.week, fHealthy: 850 });
 
   return (
     <div className="grid gap-4 lg:grid-cols-3 items-start">
@@ -285,10 +285,10 @@ function LargeCompare({ patient }: { patient: Patient }) {
       <div className="surface p-4">
         <div className="text-[10px] uppercase tracking-[0.16em] text-text-faint">Compare</div>
         <div className="mt-3 grid grid-cols-1 gap-3">
-          <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
+          <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))}>
             {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
           </select>
-          <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
+          <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))}>
             {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
           </select>
 

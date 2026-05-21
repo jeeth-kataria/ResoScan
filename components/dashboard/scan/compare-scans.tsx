@@ -10,15 +10,15 @@ export function CompareScans({ patient }: { patient: Patient }) {
   const scans = useMemo(() => patient.scans.slice().sort((a,b)=>a.date.localeCompare(b.date)), [patient]);
   const [fromIdx, setFromIdx] = useState(0);
   const [toIdx, setToIdx] = useState(Math.max(0, scans.length - 1));
-  const [showCharts, setShowCharts] = useState(false);
+  const [showCharts, setShowCharts] = useState(true);
 
   const from = scans[fromIdx] ?? scans[0];
   const to = scans[toIdx] ?? scans[scans.length - 1];
   const summary = useMemo(() => computeImprovementBetween(from, to), [from, to]);
 
   // Build lightweight shapes for live charting
-  const fromShape = useMemo(() => buildScan({ callusPct: from.tsiPct, pressureN: from.pressureN ?? 3.5, implantLoose: !!from.implantLoose, week: from.week, fHealthy: 850 }), [from]);
-  const toShape = useMemo(() => buildScan({ callusPct: to.tsiPct, pressureN: to.pressureN ?? 3.5, implantLoose: !!to.implantLoose, week: to.week, fHealthy: 850 }), [to]);
+  const fromShape = useMemo(() => buildScan({ callusPct: from.tsiPct, pressureN: 3.5, implantLoose: false, week: from.week, fHealthy: 850 }), [from]);
+  const toShape = useMemo(() => buildScan({ callusPct: to.tsiPct, pressureN: 3.5, implantLoose: false, week: to.week, fHealthy: 850 }), [to]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-3">
@@ -39,8 +39,8 @@ export function CompareScans({ patient }: { patient: Patient }) {
             </div>
           </div>
         ) : (
-          <div className="surface p-6 flex items-center justify-center text-[13px] text-text-faint">
-            Charts hidden — click "Show charts" to view comparison
+          <div className="surface p-4 flex items-center justify-center text-[13px] text-text-faint min-h-[80px] rounded-xl border border-dashed border-line">
+            Click &quot;Show charts&quot; to view side-by-side PSD comparison
           </div>
         )}
       </div>
@@ -50,10 +50,10 @@ export function CompareScans({ patient }: { patient: Patient }) {
         <div className="surface p-4 h-full flex flex-col">
           <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">Compare scans</div>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
+            <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))}>
               {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
             </select>
-            <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
+            <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))}>
               {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
             </select>
           </div>

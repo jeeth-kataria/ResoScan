@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ShellRail } from "@/components/dashboard/shell-rail";
 import { ShellTopbar } from "@/components/dashboard/shell-topbar";
+import { MobileNav } from "@/components/dashboard/mobile-nav";
+import { DemoOnboarding } from "@/components/dashboard/demo-onboarding";
 
 export const metadata: Metadata = {
   title: "ResoScan Clinical Console",
@@ -21,8 +23,14 @@ export default function DashboardLayout({
         <Suspense fallback={<div className="h-16 border-b border-line" />}>
           <ShellTopbar />
         </Suspense>
-        <main className="flex-1 overflow-auto">{children}</main>
+        {/* pb-20 md:pb-0 reserves space for the mobile bottom nav */}
+        <main className="flex-1 overflow-auto pb-20 md:pb-0">{children}</main>
       </div>
+      <Suspense fallback={null}>
+        <MobileNav />
+      </Suspense>
+      {/* First-visit guided tour (client-side, localStorage gated) */}
+      <DemoOnboarding />
     </div>
   );
 }
