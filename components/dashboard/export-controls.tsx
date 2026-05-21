@@ -9,11 +9,21 @@ export function ExportControls({ patient, shape }: { patient: Patient; shape: an
   function downloadCsv() {
     const rows = ["date,week,tsiPct,fnHz,zeta,classification"];
     for (const s of patient.scans) rows.push(`${s.date},${s.week},${s.tsiPct},${s.fnHz},${s.zeta},${s.classification}`);
-    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    // Add UTF-8 BOM so Excel recognises UTF-8 CSVs
+    const csvContent = "\uFEFF" + rows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${patient.id}_scans.csv`; a.click();
-    URL.revokeObjectURL(url);
+    a.href = url;
+    a.download = `${patient.id}_scans.csv`;
+    // Append to DOM to ensure click works in all browsers
+    document.body.appendChild(a);
+    a.click();
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
   }
 
   function printSummary() {

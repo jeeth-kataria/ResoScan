@@ -7,6 +7,9 @@ import { ChevronRight, AlertTriangle, Check, Clock } from "lucide-react";
 import { PATIENTS, statusColor, statusLabel, latestScan, type Patient } from "@/lib/patients";
 import { predict, predictionHeadline } from "@/lib/prediction";
 import { TrajectoryChart } from "@/components/dashboard/patients/trajectory-chart";
+import { ResonanceGraph } from "@/components/dashboard/scan/resonance-graph";
+import { buildScan } from "@/lib/scan";
+import { computeImprovementBetween } from "@/lib/analysis";
 import { cn } from "@/lib/utils";
 
 export default function PatientsPage() {
@@ -168,6 +171,19 @@ function PatientDetail({ patient }: { patient: Patient }) {
 
         <TrajectoryChart patient={patient} height={340} />
 
+        {/* ==================== Large comparison panel ==================== */}
+        <div className="mt-6 border-t border-line pt-6">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.16em] text-text-faint">Scan comparison</div>
+              <div className="mt-0.5 font-display text-lg font-semibold text-text">Compare two scans in detail</div>
+            </div>
+            <div className="text-[11px] text-text-muted">Interactive · large view</div>
+          </div>
+
+          <LargeCompare patient={patient} />
+        </div>
+
         {/* legend strip */}
         <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-line pt-3 text-[11px] text-text-muted">
           <LegendDot color="var(--text-faint)" dashed label="Population average" />
@@ -235,6 +251,56 @@ function PatientDetail({ patient }: { patient: Patient }) {
           </div>
         </div>
       </aside>
+    </div>
+  );
+}
+
+function LargeCompare({ patient }: { patient: Patient }) {
+  const scans = patient.scans.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const [fromIdx, setFromIdx] = useState(Math.max(0, scans.length - 2));
+  const [toIdx, setToIdx] = useState(Math.max(0, scans.length - 1));
+
+  const from = scans[fromIdx] ?? scans[0];
+  const to = scans[toIdx] ?? scans[scans.length - 1];
+  const summary = computeImprovementBetween(from, to);
+
+  const fromShape = buildScan({ callusPct: from.tsiPct, pressureN: from.pressureN ?? 3.5, implantLoose: !!from.implantLoose, week: from.week, fHealthy: 850 });
+  const toShape = buildScan({ callusPct: to.tsiPct, pressureN: to.pressureN ?? 3.5, implantLoose: !!to.implantLoose, week: to.week, fHealthy: 850 });
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-3 items-start">
+      <div className="lg:col-span-2">
+        <div className="flex gap-3">
+          <div className="flex-1 surface p-4">
+            <div className="text-[11px] text-text-faint mb-2">Older scan · {from.date} · TSI {from.tsiPct}%</div>
+            <ResonanceGraph shape={fromShape} progress={1} height={420} showHealthy={false} />
+          </div>
+          <div className="flex-1 surface p-4">
+            <div className="text-[11px] text-text-faint mb-2">Newer scan · {to.date} · TSI {to.tsiPct}%</div>
+            <ResonanceGraph shape={toShape} progress={1} height={420} showHealthy={false} />
+          </div>
+        </div>
+      </div>
+
+      <div className="surface p-4">
+        <div className="text-[10px] uppercase tracking-[0.16em] text-text-faint">Compare</div>
+        <div className="mt-3 grid grid-cols-1 gap-3">
+          <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
+            {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
+          </select>
+          <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
+            {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
+          </select>
+
+          <div className="mt-2">
+            <div className="font-mono text-[28px] font-semibold" style={{ color: summary.deltaAbs >= 0 ? "var(--safe)" : "var(--danger)" }}>
+              {summary.deltaAbs >= 0 ? `+${summary.deltaAbs}%` : `${summary.deltaAbs}%`}
+            </div>
+            <div className="text-[12px] text-text-faint mt-1">{summary.fromDate} → {summary.toDate} · {summary.weeksElapsed} weeks</div>
+            <div className="mt-3 text-[13px]">{summary.advice}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
