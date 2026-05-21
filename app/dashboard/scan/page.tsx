@@ -25,6 +25,8 @@ import { AiAssessment } from "@/components/dashboard/scan/ai-assessment";
 import { ImprovementCard } from "@/components/dashboard/improvement-card";
 import AddScanForm from "@/components/dashboard/scan/add-scan";
 import CompareScans from "@/components/dashboard/scan/compare-scans";
+import DateRangeSelector from "@/components/dashboard/scan/date-range-selector";
+import ExportControls from "@/components/dashboard/export-controls";
 
 const SCAN_DURATION_MS = 2200;
 
@@ -40,6 +42,7 @@ function ScanPageInner() {
   const params = useSearchParams();
   const initialPatient = getPatient(params.get("p") ?? "arjun");
   const [patient, setPatient] = useState(initialPatient);
+  const [highlightRange, setHighlightRange] = useState<{fromWeek:number;toWeek:number} | null>(null);
 
   const [scanParams, setScanParams] = useState<ScanParams>(() => paramsFromPatient(patient));
   const [progress, setProgress] = useState(1);
@@ -352,11 +355,22 @@ function ScanPageInner() {
               week {scanParams.week} · TSI {shape.metrics.tsi.toFixed(0)}%
             </span>
           </header>
-          <HealingTimeline currentWeek={scanParams.week} currentTsi={shape.metrics.tsi} />
+          <HealingTimeline currentWeek={scanParams.week} currentTsi={shape.metrics.tsi} patientScans={patient.scans} highlightRange={highlightRange} />
         </div>
 
         {/* AI Assessment — right */}
-        <AiAssessment shape={shape} />
+          <AiAssessment shape={shape} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
+          <div>
+            <DateRangeSelector scans={patient.scans} onChange={(f,t)=>setHighlightRange({fromWeek:f,toWeek:t})} />
+            <div className="mt-3">
+              <ExportControls patient={patient} shape={shape} />
+            </div>
+          </div>
+          <div />
+          <div />
       </section>
 
       {/* ============================ METRICS + EXTRAS ============================ */}

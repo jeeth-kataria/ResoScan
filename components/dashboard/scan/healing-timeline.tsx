@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import type { Scan } from "@/lib/patients";
 
 /** Gompertz healing — matches engine/healing_model.py */
 function gompertzHealing(week: number, rate = 0.45, inflection = 4.5): number {
@@ -13,12 +14,16 @@ export function HealingTimeline({
   weeks = 17,
   width = 760,
   height = 200,
+  patientScans,
+  highlightRange,
 }: {
   currentWeek: number;
   currentTsi: number;
   weeks?: number;
   width?: number;
   height?: number;
+  patientScans?: Scan[];
+  highlightRange?: { fromWeek: number; toWeek: number } | null;
 }) {
   const padL = 32, padR = 16, padT = 18, padB = 30;
   const innerW = width - padL - padR;
@@ -59,6 +64,14 @@ export function HealingTimeline({
   return (
     <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height}
       role="img" aria-label="Expected healing timeline">
+      {/* highlight selected range */}
+      {highlightRange && (
+        <rect
+          x={wToX(highlightRange.fromWeek)} y={padT}
+          width={wToX(Math.min(highlightRange.toWeek, weeks - 1)) - wToX(highlightRange.fromWeek)} height={innerH}
+          fill="rgba(99,102,241,0.08)"
+        />
+      )}
       {/* phase shading */}
       {phases.map((p, i) => (
         <g key={i}>
@@ -105,6 +118,22 @@ export function HealingTimeline({
       >
         now · week {currentWeek.toFixed(0)} · {currentTsi.toFixed(0)}%
       </text>
+
+      {/* patient scans (overlay) */}
+      {patientScans && patientScans.length > 0 && (
+        <g>
+          <polyline
+            fill="none"
+            stroke="var(--text-muted)"
+            strokeWidth={1.2}
+            points={patientScans.map((s) => `${wToX(s.week)},${tsiToY(s.tsiPct)}`).join(" ")}
+            strokeOpacity={0.9}
+          />
+          {patientScans.map((s, i) => (
+            <circle key={s.date} cx={wToX(s.week)} cy={tsiToY(s.tsiPct)} r={4} fill="white" stroke="var(--accent)" strokeWidth={1.2} />
+          ))}
+        </g>
+      )}
 
       {/* axes */}
       <line x1={padL} x2={width - padR} y1={height - padB} y2={height - padB} stroke="var(--line)" />
