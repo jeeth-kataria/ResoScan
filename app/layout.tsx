@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Inter, JetBrains_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,7 +44,23 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: "var(--bg-card)",
+              border: "1px solid var(--line)",
+              color: "var(--text)",
+              fontFamily: "var(--font-inter), system-ui, sans-serif",
+              fontSize: "13px",
+            },
+            className: "sonner-toast",
+          }}
+          richColors
+        />
+      </body>
     </html>
   );
 }

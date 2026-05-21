@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Users, Sparkles, Home } from "lucide-react";
+import { Activity, Users, Sparkles, Settings, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/dashboard/scan",       label: "Scan",     icon: Activity },
   { href: "/dashboard/patients",   label: "Patients", icon: Users },
   { href: "/dashboard/model",      label: "Model",    icon: Sparkles },
+  { href: "/dashboard/settings",   label: "Settings", icon: Settings },
 ];
 
 export function MobileNav() {
@@ -23,11 +24,11 @@ export function MobileNav() {
             key={href}
             href={href}
             className={cn(
-              "flex flex-col items-center gap-1 px-4 py-3 text-[10px] uppercase tracking-wider transition-colors",
+              "flex flex-col items-center gap-1 px-3 py-3 text-[10px] uppercase tracking-wider transition-colors",
               active ? "text-accent" : "text-text-muted"
             )}
           >
-            <Icon size={20} strokeWidth={1.6} />
+            <Icon size={19} strokeWidth={1.6} />
             <span>{label}</span>
           </Link>
         );

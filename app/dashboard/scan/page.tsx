@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Play, RotateCcw, Activity, ChevronRight, Stethoscope, Microscope } from "lucide-react";
+import { toast } from "sonner";
 
 import { getPatient, latestScan } from "@/lib/patients";
 import { predict, predictionHeadline } from "@/lib/prediction";
@@ -56,6 +57,8 @@ function ScanPageInner() {
   const [scanning, setScanning] = useState(false);
   const [lastScannedAt, setLastScannedAt] = useState<string | null>(null);
   const rafRef = useRef<number | null>(null);
+  // Ref to always read the latest shape inside the RAF tick without stale closure
+  const latestShapeRef = useRef<ReturnType<typeof buildScan> | null>(null);
 
   // Keep patient in sync with URL — fixes the patient-switch bug
   useEffect(() => {
@@ -82,6 +85,8 @@ function ScanPageInner() {
 
   // Derive everything from scanParams
   const shape = useMemo(() => buildScan(scanParams), [scanParams]);
+  // Keep a ref synced so the RAF tick can read the latest shape without stale closure
+  latestShapeRef.current = shape;
   const pred = useMemo(() => predict(patient), [patient]);  // days-to-walk stays patient-driven
   const headline = predictionHeadline(pred);
   const last = latestScan(patient);
@@ -108,9 +113,19 @@ function ScanPageInner() {
         setScanning(false);
         // Record timestamp when scan completes
         const now2 = new Date();
-        setLastScannedAt(
-          now2.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-        );
+        const timeStr = now2.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        setLastScannedAt(timeStr);
+        // Show a completion toast — driven by latest shape metrics
+        // We read the latest shape via a ref to avoid stale closure
+        const latestShape = latestShapeRef.current;
+        if (latestShape) {
+          const { tsi, classification, trafficLight } = latestShape.metrics;
+          const toneIcon = trafficLight === "green" ? "✅" : trafficLight === "amber" ? "⚠️" : "🔴";
+          toast(`${toneIcon} Scan complete — TSI ${tsi.toFixed(1)}%`, {
+            description: `${classification} · ${timeStr}`,
+            duration: 3500,
+          });
+        }
       }
     };
     rafRef.current = requestAnimationFrame(tick);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Users, Sparkles, Home } from "lucide-react";
+import { Activity, Users, Sparkles, Home, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -44,13 +44,33 @@ export function ShellRail() {
           );
         })}
       </nav>
-      <Link
-        href="/"
-        aria-label="Back to landing"
-        className="mt-auto flex h-10 w-10 items-center justify-center rounded-lg text-text-faint hover:text-text"
-      >
-        <Home size={18} strokeWidth={1.6} />
-      </Link>
+
+      {/* Bottom: settings + home */}
+      <div className="flex flex-col items-center gap-1">
+        <Link
+          href="/dashboard/settings"
+          aria-label="Settings"
+          className={cn(
+            "group relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+            path?.startsWith("/dashboard/settings") ? "text-accent" : "text-text-faint hover:text-text"
+          )}
+        >
+          {path?.startsWith("/dashboard/settings") && (
+            <span className="absolute left-[-9px] top-2 bottom-2 w-[2px] rounded-full bg-accent" />
+          )}
+          <Settings size={17} strokeWidth={1.6} />
+          <span className="pointer-events-none absolute left-[58px] z-10 whitespace-nowrap rounded-md border border-line bg-bg-card px-2 py-1 text-[11px] text-text opacity-0 group-hover:opacity-100 transition-opacity">
+            Settings
+          </span>
+        </Link>
+        <Link
+          href="/"
+          aria-label="Back to landing"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-faint hover:text-text transition-colors"
+        >
+          <Home size={18} strokeWidth={1.6} />
+        </Link>
+      </div>
     </aside>
   );
 }
