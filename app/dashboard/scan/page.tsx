@@ -22,6 +22,7 @@ import { ClinicalMetricsGrid } from "@/components/dashboard/scan/clinical-metric
 import { HealingTimeline } from "@/components/dashboard/scan/healing-timeline";
 import { Spectrogram } from "@/components/dashboard/scan/spectrogram";
 import { AiAssessment } from "@/components/dashboard/scan/ai-assessment";
+import { ImprovementCard } from "@/components/dashboard/improvement-card";
 
 const SCAN_DURATION_MS = 2200;
 
@@ -297,6 +298,8 @@ function ScanPageInner() {
               {shape.metrics.recommendation}
             </p>
           </div>
+
+          <ImprovementCard patient={patient} />
 
           <a
             href={`/dashboard/patients?p=${patient.key}`}
