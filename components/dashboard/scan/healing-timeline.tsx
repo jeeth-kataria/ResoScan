@@ -130,7 +130,7 @@ export function HealingTimeline({
             strokeOpacity={0.9}
           />
           {patientScans.map((s, i) => (
-            <circle key={s.date} cx={wToX(s.week)} cy={tsiToY(s.tsiPct)} r={4} fill="white" stroke="var(--accent)" strokeWidth={1.2} />
+            <circle key={`${s.date}-${i}`} cx={wToX(s.week)} cy={tsiToY(s.tsiPct)} r={4} fill="white" stroke="var(--accent)" strokeWidth={1.2} />
           ))}
         </g>
       )}

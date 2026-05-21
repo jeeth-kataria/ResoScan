@@ -18,10 +18,10 @@ export function CompareScans({ patient }: { patient: Patient }) {
       <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">Compare scans</div>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
-          {scans.map((s,i)=>(<option key={s.date} value={i}>{s.date} · {s.tsiPct}%</option>))}
+          {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
         </select>
         <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))} className="rounded border border-line px-2 py-1">
-          {scans.map((s,i)=>(<option key={s.date} value={i}>{s.date} · {s.tsiPct}%</option>))}
+          {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
         </select>
       </div>
 

@@ -30,10 +30,10 @@ export function DateRangeSelector({
       <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">Highlight range</div>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <select id="drs-from" onChange={(e)=>handleChange(e,"from")} className="rounded border border-line px-2 py-1">
-          {sorted.map((s,i)=>(<option key={s.date} value={i}>{s.date} · wk {s.week.toFixed(1)}</option>))}
+          {sorted.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · wk {s.week.toFixed(1)}</option>))}
         </select>
         <select id="drs-to" onChange={(e)=>handleChange(e,"to")} className="rounded border border-line px-2 py-1">
-          {sorted.map((s,i)=>(<option key={s.date} value={i}>{s.date} · wk {s.week.toFixed(1)}</option>))}
+          {sorted.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · wk {s.week.toFixed(1)}</option>))}
         </select>
       </div>
     </div>
