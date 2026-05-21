@@ -8,8 +8,10 @@ import { PATIENTS, statusColor, statusLabel, latestScan, type Patient } from "@/
 import { predict, predictionHeadline } from "@/lib/prediction";
 import { TrajectoryChart } from "@/components/dashboard/patients/trajectory-chart";
 import { ResonanceGraph } from "@/components/dashboard/scan/resonance-graph";
+import { PsdOverlay } from "@/components/dashboard/scan/psd-overlay";
 import { buildScan } from "@/lib/scan";
 import { computeImprovementBetween } from "@/lib/analysis";
+import { PaceCard } from "@/components/dashboard/pace-card";
 import { cn } from "@/lib/utils";
 
 export default function PatientsPage() {
@@ -211,6 +213,8 @@ function PatientDetail({ patient }: { patient: Patient }) {
           </p>
         </div>
 
+        <PaceCard pred={pred} />
+
         {risks.length > 0 && (
           <div className="surface p-5">
             <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">
@@ -259,6 +263,7 @@ function LargeCompare({ patient }: { patient: Patient }) {
   const scans = patient.scans.slice().sort((a,b)=>a.date.localeCompare(b.date));
   const [fromIdx, setFromIdx] = useState(Math.max(0, scans.length - 2));
   const [toIdx, setToIdx] = useState(Math.max(0, scans.length - 1));
+  const [viewMode, setViewMode] = useState<"overlay" | "sidebyside">("overlay");
 
   const from = scans[fromIdx] ?? scans[0];
   const to = scans[toIdx] ?? scans[scans.length - 1];
@@ -267,37 +272,99 @@ function LargeCompare({ patient }: { patient: Patient }) {
   const fromShape = buildScan({ callusPct: from.tsiPct, pressureN: 3.5, implantLoose: false, week: from.week, fHealthy: 850 });
   const toShape = buildScan({ callusPct: to.tsiPct, pressureN: 3.5, implantLoose: false, week: to.week, fHealthy: 850 });
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-3 items-start">
-      <div className="lg:col-span-2">
-        <div className="flex gap-3">
-          <div className="flex-1 surface p-4">
-            <div className="text-[11px] text-text-faint mb-2">Older scan · {from.date} · TSI {from.tsiPct}%</div>
-            <ResonanceGraph shape={fromShape} progress={1} height={420} showHealthy={false} />
-          </div>
-          <div className="flex-1 surface p-4">
-            <div className="text-[11px] text-text-faint mb-2">Newer scan · {to.date} · TSI {to.tsiPct}%</div>
-            <ResonanceGraph shape={toShape} progress={1} height={420} showHealthy={false} />
-          </div>
-        </div>
-      </div>
+  const deltaColor = summary.deltaAbs >= 0 ? "var(--safe)" : "var(--danger)";
 
-      <div className="surface p-4">
-        <div className="text-[10px] uppercase tracking-[0.16em] text-text-faint">Compare</div>
-        <div className="mt-3 grid grid-cols-1 gap-3">
+  const metricRows = [
+    { label: "TSI",      from: `${from.tsiPct.toFixed(1)}%`,            to: `${to.tsiPct.toFixed(1)}%`,               delta: to.tsiPct - from.tsiPct,               unit: "%"  },
+    { label: "f₀ (Hz)", from: `${fromShape.metrics.fn.toFixed(0)}`,      to: `${toShape.metrics.fn.toFixed(0)}`,        delta: toShape.metrics.fn - fromShape.metrics.fn, unit: "Hz" },
+    { label: "ζ",        from: `${fromShape.metrics.zeta.toFixed(3)}`,    to: `${toShape.metrics.zeta.toFixed(3)}`,      delta: toShape.metrics.zeta - fromShape.metrics.zeta, unit: "", lowerBetter: true },
+    { label: "Q",        from: `${fromShape.metrics.qFactor.toFixed(1)}`, to: `${toShape.metrics.qFactor.toFixed(1)}`,  delta: toShape.metrics.qFactor - fromShape.metrics.qFactor, unit: "" },
+    { label: "RUST",     from: `${fromShape.metrics.rust}/12`,            to: `${toShape.metrics.rust}/12`,             delta: toShape.metrics.rust - fromShape.metrics.rust, unit: "" },
+  ] as { label: string; from: string; to: string; delta: number; unit: string; lowerBetter?: boolean }[];
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Pickers + summary */}
+      <div className="grid gap-4 lg:grid-cols-3 items-start">
+        <div className="lg:col-span-2">
+          {/* View toggle */}
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => setViewMode("overlay")}
+              className={`text-[11px] px-3 py-1 rounded-full border transition-colors ${viewMode === "overlay" ? "border-accent text-accent bg-accent/10" : "border-line text-text-muted hover:text-text"}`}
+            >
+              Overlay
+            </button>
+            <button
+              onClick={() => setViewMode("sidebyside")}
+              className={`text-[11px] px-3 py-1 rounded-full border transition-colors ${viewMode === "sidebyside" ? "border-accent text-accent bg-accent/10" : "border-line text-text-muted hover:text-text"}`}
+            >
+              Side by side
+            </button>
+          </div>
+
+          {viewMode === "overlay" ? (
+            <div className="surface p-4">
+              <div className="text-[10px] text-text-faint mb-2 uppercase tracking-wider">PSD overlay — green = gain, red = loss</div>
+              <PsdOverlay older={fromShape} newer={toShape} olderLabel={from.date} newerLabel={to.date} height={300} />
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <div className="flex-1 surface p-4">
+                <div className="text-[11px] text-text-faint mb-2">Older · {from.date} · TSI {from.tsiPct.toFixed(0)}%</div>
+                <ResonanceGraph shape={fromShape} progress={1} height={300} showHealthy={false} />
+              </div>
+              <div className="flex-1 surface p-4">
+                <div className="text-[11px] text-text-faint mb-2">Newer · {to.date} · TSI {to.tsiPct.toFixed(0)}%</div>
+                <ResonanceGraph shape={toShape} progress={1} height={300} showHealthy={false} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right panel: pickers + summary delta + metrics table */}
+        <div className="surface p-4 flex flex-col gap-3">
+          <div className="text-[10px] uppercase tracking-[0.16em] text-text-faint">Compare</div>
           <select value={fromIdx} onChange={(e)=>setFromIdx(Number(e.target.value))}>
-            {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
+            {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct.toFixed(0)}%</option>))}
           </select>
           <select value={toIdx} onChange={(e)=>setToIdx(Number(e.target.value))}>
-            {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct}%</option>))}
+            {scans.map((s,i)=>(<option key={`${s.date}-${i}`} value={i}>{s.date} · {s.tsiPct.toFixed(0)}%</option>))}
           </select>
 
-          <div className="mt-2">
-            <div className="font-mono text-[28px] font-semibold" style={{ color: summary.deltaAbs >= 0 ? "var(--safe)" : "var(--danger)" }}>
-              {summary.deltaAbs >= 0 ? `+${summary.deltaAbs}%` : `${summary.deltaAbs}%`}
+          {/* Big delta */}
+          <div>
+            <div className="font-mono text-[28px] font-semibold" style={{ color: deltaColor }}>
+              {summary.deltaAbs >= 0 ? `+${summary.deltaAbs}` : `${summary.deltaAbs}`}%
             </div>
-            <div className="text-[12px] text-text-faint mt-1">{summary.fromDate} → {summary.toDate} · {summary.weeksElapsed} weeks</div>
-            <div className="mt-3 text-[13px]">{summary.advice}</div>
+            <div className="font-mono text-[12px] mt-0.5" style={{ color: deltaColor, opacity: 0.75 }}>
+              {summary.deltaPct > 0 ? "+" : ""}{summary.deltaPct.toFixed(1)}% relative
+            </div>
+            <div className="text-[11px] text-text-faint mt-1">
+              {summary.fromDate} → {summary.toDate} · {summary.weeksElapsed} wk
+            </div>
+            <p className="mt-2 text-[12px] text-text-muted">{summary.advice}</p>
+          </div>
+
+          {/* Per-metric delta table */}
+          <div className="border-t border-line pt-2">
+            <div className="text-[9.5px] uppercase tracking-wider text-text-faint mb-1">Metric changes</div>
+            {metricRows.map((row) => {
+              const improved = row.lowerBetter ? row.delta < 0 : row.delta > 0;
+              const unchanged = Math.abs(row.delta) < 0.001;
+              const color = unchanged ? "var(--text-faint)" : improved ? "var(--safe)" : "var(--danger)";
+              const sign = row.delta > 0 ? "+" : "";
+              const dStr = unchanged ? "—" : `${sign}${row.delta.toFixed(row.unit === "Hz" ? 0 : row.unit === "%" ? 1 : 3)}${row.unit}`;
+              return (
+                <div key={row.label} className="flex items-center gap-1 text-[11.5px] py-1 border-b border-line/50 last:border-0">
+                  <span className="text-text-faint w-14 shrink-0">{row.label}</span>
+                  <span className="font-mono text-text-faint">{row.from}</span>
+                  <span className="text-text-faint text-[9px] mx-0.5">→</span>
+                  <span className="font-mono text-text">{row.to}</span>
+                  <span className="font-mono ml-auto font-semibold" style={{ color }}>{dStr}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

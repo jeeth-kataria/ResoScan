@@ -24,6 +24,8 @@ import { HealingTimeline } from "@/components/dashboard/scan/healing-timeline";
 import { Spectrogram } from "@/components/dashboard/scan/spectrogram";
 import { AiAssessment } from "@/components/dashboard/scan/ai-assessment";
 import { ImprovementCard } from "@/components/dashboard/improvement-card";
+import { PaceCard } from "@/components/dashboard/pace-card";
+import { TsiHistoryChart } from "@/components/dashboard/scan/tsi-history-chart";
 import AddScanForm from "@/components/dashboard/scan/add-scan";
 import CompareScans from "@/components/dashboard/scan/compare-scans";
 import DateRangeSelector from "@/components/dashboard/scan/date-range-selector";
@@ -377,6 +379,7 @@ function ScanPageInner() {
           </div>
 
           <ImprovementCard patient={patient} />
+          <PaceCard pred={pred} />
           <div className="mt-3">
             <AddScanForm onAdd={handleAddScan} />
           </div>
@@ -417,7 +420,7 @@ function ScanPageInner() {
         </div>
 
         {/* AI Assessment — right */}
-          <AiAssessment shape={shape} />
+          <AiAssessment shape={shape} predConfidence={pred.confidence} />
         </section>
 
         <section className="flex flex-wrap gap-4 items-start">
@@ -446,6 +449,10 @@ function ScanPageInner() {
         <ClinicalMetricsGrid m={shape.metrics} />
       </section>
 
+      {/* ============================ TSI HISTORY ============================ */}
+
+      <TsiHistoryChart patient={patient} />
+
       {/* ============================ SPECTROGRAM + SUMMARY ============================ */}
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -458,7 +465,7 @@ function ScanPageInner() {
               500 ms sweep
             </span>
           </div>
-          <Spectrogram data={shape.spectrogram} />
+          <Spectrogram data={shape.spectrogram} peakHz={shape.peakHz} />
           <p className="mt-3 border-t border-line pt-3 text-[12px] leading-relaxed text-text-muted">
             The vertical band lights up where the bone vibrated back the strongest — the
             resonance signature changes shape as the bone heals.

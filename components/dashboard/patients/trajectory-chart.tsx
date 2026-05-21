@@ -175,6 +175,21 @@ export function TrajectoryChart({ patient, width = 760, height = 360, sparkline 
                 fill="var(--text-faint)" textAnchor="end">{g}</text>
             </g>
           ))}
+          {/* Confidence badge — top-left corner */}
+          {(() => {
+            const confColor = pred.confidence === "high" ? "var(--safe)" : pred.confidence === "moderate" ? "var(--caution)" : "var(--danger)";
+            const confLabel = pred.confidence === "high" ? "High confidence" : pred.confidence === "moderate" ? "Moderate confidence" : "Low confidence";
+            return (
+              <g>
+                <rect x={padL + 4} y={padT + 4} width={110} height={16} rx="4"
+                  fill={confColor} fillOpacity="0.12" />
+                <text x={padL + 59} y={padT + 15}
+                  fontFamily="var(--font-mono)" fontSize="9.5" fill={confColor} textAnchor="middle">
+                  {confLabel} · {patient.scans.length} scan{patient.scans.length !== 1 ? "s" : ""}
+                </text>
+              </g>
+            );
+          })()}
         </>
       )}
     </svg>
