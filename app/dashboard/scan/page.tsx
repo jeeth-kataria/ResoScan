@@ -24,6 +24,7 @@ import { Spectrogram } from "@/components/dashboard/scan/spectrogram";
 import { AiAssessment } from "@/components/dashboard/scan/ai-assessment";
 import { ImprovementCard } from "@/components/dashboard/improvement-card";
 import AddScanForm from "@/components/dashboard/scan/add-scan";
+import CompareScans from "@/components/dashboard/scan/compare-scans";
 
 const SCAN_DURATION_MS = 2200;
 
@@ -317,6 +318,9 @@ function ScanPageInner() {
           <ImprovementCard patient={patient} />
           <div className="mt-3">
             <AddScanForm onAdd={handleAddScan} />
+          </div>
+          <div className="mt-3">
+            <CompareScans patient={patient} />
           </div>
 
           <a

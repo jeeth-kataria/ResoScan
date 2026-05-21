@@ -54,3 +54,40 @@ export function computeImprovement(patient: Patient): ImprovementSummary {
     advice,
   };
 }
+
+/**
+ * Compute improvement between two specific scans.
+ */
+export function computeImprovementBetween(from: Scan, to: Scan): ImprovementSummary {
+  const tsiFrom = from.tsiPct;
+  const tsiTo = to.tsiPct;
+  const deltaAbs = +(tsiTo - tsiFrom).toFixed(1);
+  const deltaPct = +(deltaAbs / Math.max(0.1, tsiFrom) * 100).toFixed(1);
+
+  const days = (new Date(to.date + "T00:00:00Z")).getTime() - (new Date(from.date + "T00:00:00Z")).getTime();
+  const weeksElapsed = +(days / (1000 * 60 * 60 * 24) / 7).toFixed(2);
+  const weeklyRate = weeksElapsed > 0 ? +(deltaAbs / weeksElapsed).toFixed(2) : 0;
+
+  let advice = "";
+  if (deltaAbs >= 10) {
+    advice = "Marked improvement — continue current plan and reassess in clinic.";
+  } else if (deltaAbs >= 3) {
+    advice = "Moderate improvement — encourage gradual weight-bearing and repeat scan in 2–4 weeks.";
+  } else if (deltaAbs >= 0) {
+    advice = "Minimal change — maintain protection, consider physiotherapy and repeat scan.";
+  } else {
+    advice = "Worsening TSI — urgent clinical review recommended; consider radiograph and surgical review.";
+  }
+
+  return {
+    fromDate: from.date,
+    toDate: to.date,
+    tsiFrom,
+    tsiTo,
+    deltaAbs,
+    deltaPct,
+    weeksElapsed,
+    weeklyRate,
+    advice,
+  };
+}
