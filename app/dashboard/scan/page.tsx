@@ -23,6 +23,7 @@ import { HealingTimeline } from "@/components/dashboard/scan/healing-timeline";
 import { Spectrogram } from "@/components/dashboard/scan/spectrogram";
 import { AiAssessment } from "@/components/dashboard/scan/ai-assessment";
 import { ImprovementCard } from "@/components/dashboard/improvement-card";
+import AddScanForm from "@/components/dashboard/scan/add-scan";
 
 const SCAN_DURATION_MS = 2200;
 
@@ -36,7 +37,8 @@ export default function ScanPage() {
 
 function ScanPageInner() {
   const params = useSearchParams();
-  const patient = getPatient(params.get("p") ?? "arjun");
+  const initialPatient = getPatient(params.get("p") ?? "arjun");
+  const [patient, setPatient] = useState(initialPatient);
 
   const [scanParams, setScanParams] = useState<ScanParams>(() => paramsFromPatient(patient));
   const [progress, setProgress] = useState(1);
@@ -106,6 +108,19 @@ function ScanPageInner() {
 
   const updateParams = (p: Partial<ScanParams>) =>
     setScanParams((prev) => ({ ...prev, ...p }));
+
+  function handleAddScan(s: any) {
+    // compute week since fracture
+    const fracture = new Date(patient.fractureDate + "T00:00:00Z");
+    const d = (new Date(s.date + "T00:00:00Z")).getTime() - fracture.getTime();
+    const week = +(d / (1000 * 60 * 60 * 24 * 7)).toFixed(2);
+    const newScan = { ...s, week };
+    const scans = [...patient.scans, newScan].sort((a,b)=>a.date.localeCompare(b.date));
+    const updated = { ...patient, scans };
+    setPatient(updated);
+    // also update scanParams to reflect the newest week
+    setScanParams((prev) => ({ ...prev, week: newScan.week, callusPct: newScan.tsiPct }));
+  }
 
   const numbersActive = progress > 0.55;
 
@@ -300,6 +315,9 @@ function ScanPageInner() {
           </div>
 
           <ImprovementCard patient={patient} />
+          <div className="mt-3">
+            <AddScanForm onAdd={handleAddScan} />
+          </div>
 
           <a
             href={`/dashboard/patients?p=${patient.key}`}

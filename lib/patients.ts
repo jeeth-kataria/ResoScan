@@ -63,12 +63,12 @@ function classify(tsi: number): "Stable" | "Delayed Union" | "Non-Union" {
   return "Non-Union";
 }
 
-function zetaFromTsi(tsi: number): number {
+export function zetaFromTsi(tsi: number): number {
   // matches engine.signal_generator: zeta = 0.20 - 0.175 * (tsi/100)^1.3
   return 0.20 - 0.175 * Math.pow(tsi / 100, 1.3);
 }
 
-function fnFromTsi(tsi: number): number {
+export function fnFromTsi(tsi: number): number {
   return F_BASELINE_HZ + TSI_TO_FN_RANGE * (tsi / 100);
 }
 
