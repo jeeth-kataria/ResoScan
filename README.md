@@ -1,10 +1,6 @@
 # 2026-ResoScan
 
-> Knowledge-transfer snapshot of the ResoScan clinical console for **UNISYS 2026**.
-
-This repository contains the transferred Next.js clinical console and client-side scan logic only. The older local PyQt/desktop worktree is intentionally not included.
-
-The companion hardware firmware, ML training pipeline, and Streamlit simulator live at https://github.com/Yashasnagraj/UNISYS.
+Next.js clinical console for ResoScan.
 
 ## Live
 
