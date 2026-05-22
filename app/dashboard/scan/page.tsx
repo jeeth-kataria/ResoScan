@@ -25,7 +25,6 @@ import { Spectrogram } from "@/components/dashboard/scan/spectrogram";
 import { AiAssessment } from "@/components/dashboard/scan/ai-assessment";
 import { ImprovementCard } from "@/components/dashboard/improvement-card";
 import AddScanForm from "@/components/dashboard/scan/add-scan";
-import CompareScans from "@/components/dashboard/scan/compare-scans";
 import DateRangeSelector from "@/components/dashboard/scan/date-range-selector";
 import ExportControls from "@/components/dashboard/export-controls";
 
@@ -176,8 +175,8 @@ function ScanPageInner() {
     <div className="flex flex-col gap-6 p-6">
 
       {/* ============================ ONBOARDING HINT ============================ */}
-      <div className="flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3">
-        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-[#001619]">1</span>
+      <div className="flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3.5">
+        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-[#001619]">i</span>
         <p className="text-[13px] leading-relaxed text-text-muted">
           <span className="font-semibold text-text">Start here —</span>{" "}
           select a patient from the top-right picker, then press{" "}
@@ -186,12 +185,12 @@ function ScanPageInner() {
         </p>
       </div>
 
-      {/* ============================ TOP STRIP ============================ */}
+      {/* ============================ MAIN CLINICAL WORKSPACE ============================ */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
 
-        {/* LEFT */}
-        <aside className="flex flex-col gap-5">
-          <div className="surface flex flex-col items-center gap-4 p-5">
+        {/* LEFT COLUMN: Inputs & Configuration */}
+        <div className="flex flex-col gap-6">
+          <div className="surface card-hover flex flex-col items-center gap-4 p-5">
             <BodySilhouette width={180} active={scanning} />
             <div className="w-full border-t border-line pt-3 text-center">
               <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">
@@ -206,7 +205,7 @@ function ScanPageInner() {
             </div>
           </div>
 
-          <div className="surface p-5">
+          <div className="surface card-hover p-5">
             <div className="flex items-center gap-3">
               <div
                 className="flex h-12 w-12 items-center justify-center rounded-full text-[14px] font-semibold"
@@ -262,11 +261,13 @@ function ScanPageInner() {
               </>
             )}
           </Button>
-        </aside>
 
-        {/* CENTER */}
-        <div className="flex flex-col gap-5">
-          <div className="surface min-h-[400px] p-6">
+          <ScanControls params={scanParams} onChange={updateParams} />
+        </div>
+
+        {/* CENTER COLUMN: Real-Time Signal Data & Timeline */}
+        <div className="flex flex-col gap-6">
+          <div className="surface card-hover min-h-[400px] p-6">
             <header className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity size={16} className="text-accent" strokeWidth={1.8} />
@@ -281,7 +282,7 @@ function ScanPageInner() {
             <ResonanceGraph shape={shape} progress={progress} />
           </div>
 
-          <div className="surface p-5">
+          <div className="surface card-hover p-5">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
                 Time-domain waveform
@@ -291,7 +292,7 @@ function ScanPageInner() {
             <WaveformStrip shape={shape} progress={progress} />
             <div className="mt-2 flex items-center justify-between border-t border-line pt-2">
               <div className="font-mono text-[11px] text-text-faint flex items-center gap-3">
-                <span>Scan #{patient.scans.length.toString().padStart(2,"0")} · 2.2 s · 20–1100 Hz sweep</span>
+                <span>Scan #{patient.scans.length.toString().padStart(2, "0")} · 2.2 s · 20–1100 Hz sweep</span>
                 {lastScannedAt && !scanning && (
                   <span className="text-accent/70">· scanned {lastScannedAt}</span>
                 )}
@@ -306,30 +307,79 @@ function ScanPageInner() {
               </button>
             </div>
           </div>
+
+          <div className="surface card-hover p-5">
+            <header className="mb-1 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Microscope size={14} className="text-accent" strokeWidth={1.6} />
+                <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
+                  Healing timeline · 16 weeks
+                </span>
+              </div>
+              <span className="font-mono text-[11px] text-text-faint">
+                week {scanParams.week} · TSI {shape.metrics.tsi.toFixed(0)}%
+              </span>
+            </header>
+            <HealingTimeline
+              currentWeek={scanParams.week}
+              currentTsi={shape.metrics.tsi}
+              patientScans={patient.scans}
+              highlightRange={highlightRange}
+            />
+          </div>
+
+          {/* Range selection and export actions */}
+          <div className="flex flex-wrap gap-4 items-start bg-bg-panel/40 border border-line rounded-xl p-4">
+            <div className="flex-1 min-w-[200px]">
+              <DateRangeSelector scans={patient.scans} onChange={(f,t)=>setHighlightRange({fromWeek:f,toWeek:t})} />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <ExportControls patient={patient} shape={shape} currentWeek={scanParams.week} />
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT */}
-        <aside className="flex flex-col gap-4">
-          <div className="surface p-5">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">
-              Healing score
+        {/* RIGHT COLUMN: Diagnostic Scores & Action Forms */}
+        <div className="flex flex-col gap-6">
+          {/* Healing Score KPI */}
+          <div
+            className="kpi-card p-5"
+            style={{ borderTop: `2px solid ${toneColor}` }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">Healing score</div>
+              <span
+                className="badge"
+                style={{
+                  background: `${toneColor}18`,
+                  color: toneColor,
+                  border: `1px solid ${toneColor}35`,
+                }}
+              >
+                {shape.metrics.trafficLight === "green" ? "Safe" : shape.metrics.trafficLight === "amber" ? "Caution" : "Risk"}
+              </span>
             </div>
-            <div className="mt-1 flex items-baseline gap-1">
+            <div className="mt-2 flex items-baseline gap-1">
               <span className="font-mono text-[52px] font-semibold leading-none" style={{ color: toneColor }}>
                 <AnimatedNumber value={Math.round(shape.metrics.tsi)} active={numbersActive} />
               </span>
               <span className="font-mono text-2xl text-text-faint">%</span>
             </div>
-            <div className="mt-1 text-[12px] text-text-muted">
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.round(shape.metrics.tsi)}%`, background: toneColor }}
+              />
+            </div>
+            <div className="mt-2 text-[12px] text-text-muted">
               Bone stiffness vs healthy reference
             </div>
           </div>
 
-          <div className="surface p-5">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">
-              Days to walk
-            </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
+          {/* Days to walk KPI */}
+          <div className="kpi-card p-5">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-text-faint">Days to walk</div>
+            <div className="mt-2 flex items-baseline gap-1.5">
               <span className="font-mono text-[40px] font-semibold leading-none" style={{ color: toneColor }}>
                 {pred.daysRemaining === null
                   ? "—"
@@ -339,7 +389,7 @@ function ScanPageInner() {
                 <span className="font-mono text-base text-text-faint">days</span>
               )}
             </div>
-            <div className="mt-1 text-[12px] text-text-muted">
+            <div className="mt-1.5 text-[12px] text-text-muted">
               {pred.daysRemaining === null
                 ? "AI projects healing has stalled — escalate to surgeon."
                 : pred.daysRemaining === 0
@@ -348,8 +398,9 @@ function ScanPageInner() {
             </div>
           </div>
 
+          {/* Clinical verdict */}
           <div
-            className="surface p-5"
+            className="surface card-hover p-5"
             style={{ borderLeft: `3px solid ${toneColor}` }}
           >
             <div className="flex items-center gap-2">
@@ -377,12 +428,10 @@ function ScanPageInner() {
           </div>
 
           <ImprovementCard patient={patient} />
-          <div className="mt-3">
-            <AddScanForm onAdd={handleAddScan} />
-          </div>
-          <div className="mt-3">
-            <CompareScans patient={patient} />
-          </div>
+          
+          <AddScanForm onAdd={handleAddScan} />
+
+          <AiAssessment shape={shape} />
 
           <a
             href={`/dashboard/patients?p=${patient.key}`}
@@ -391,34 +440,8 @@ function ScanPageInner() {
             <span>See full healing trajectory</span>
             <ChevronRight size={16} className="transition-transform group-hover:translate-x-0.5" />
           </a>
-        </aside>
-      </section>
-
-      {/* ============================ DEEPER SECTION ============================ */}
-
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)_360px]">
-        {/* Scan controls — left column to match the top layout */}
-        <ScanControls params={scanParams} onChange={updateParams} />
-
-        {/* Healing timeline — center */}
-        <div className="surface p-5">
-          <header className="mb-1 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Microscope size={14} className="text-accent" strokeWidth={1.6} />
-              <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
-                Healing timeline · 16 weeks
-              </span>
-            </div>
-            <span className="font-mono text-[11px] text-text-faint">
-              week {scanParams.week} · TSI {shape.metrics.tsi.toFixed(0)}%
-            </span>
-          </header>
-          <HealingTimeline currentWeek={scanParams.week} currentTsi={shape.metrics.tsi} patientScans={patient.scans} highlightRange={highlightRange} />
         </div>
-
-        {/* AI Assessment — right */}
-          <AiAssessment shape={shape} />
-        </section>
+      </section>
 
         <section className="flex flex-wrap gap-4 items-start">
           <div className="min-w-[240px]">
@@ -449,7 +472,7 @@ function ScanPageInner() {
       {/* ============================ SPECTROGRAM + SUMMARY ============================ */}
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="surface p-5">
+        <div className="surface card-hover p-5">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
               Spectrogram · frequency over time
@@ -465,7 +488,7 @@ function ScanPageInner() {
           </p>
         </div>
 
-        <div className="surface p-5">
+        <div className="surface card-hover p-5">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-[0.16em] text-text-faint">
               Clinical summary

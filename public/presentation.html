@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResoScan Presentation Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --bg-card: #0b0f19;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-faint: #4b5563;
+      --accent: #0ea5e9;
+      --accent-glow: rgba(14, 165, 233, 0.15);
+      --safe: #10b981;
+      --caution: #f59e0b;
+      --danger: #ef4444;
+      --line: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Presentation Layout */
+    .presentation-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Navbar / Header */
+    header {
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      z-index: 10;
+      background: rgba(3, 7, 18, 0.8);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-icon::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent);
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .deck-info {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--line);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* Slides Wrapper */
+    .slides-wrapper {
+      flex-grow: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      transform: translateY(20px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 40px 10%;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .highlight {
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    h2 {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+    }
+
+    p.lead {
+      font-size: 20px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 30px;
+      max-w: 80%;
+    }
+
+    .slide-grid {
+      display: grid;
+      grid-template-cols: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 30px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(14, 165, 233, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-text {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .badge-accent {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(14, 165, 233, 0.3);
+    }
+
+    /* Footer & Controls */
+    footer {
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      z-index: 10;
+      background: rgba(3, 7, 18, 0.8);
+      backdrop-filter: blur(12px);
+    }
+
+    .progress-bar-container {
+      width: 40%;
+      height: 4px;
+      background: var(--line);
+      border-radius: 2px;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .slide-controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .control-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Specific Visual Elements */
+    .resonance-wave-demo {
+      width: 100%;
+      height: 250px;
+      background: rgba(11, 15, 25, 0.5);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .resonance-wave-demo svg {
+      width: 90%;
+      height: 80%;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-cols: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .team-member {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      padding: 16px 20px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .team-member-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .team-member-dept {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .team-member-inst {
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      .slide-grid {
+        grid-template-cols: 1fr;
+      }
+      h1 { font-size: 36px; }
+      h2 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="presentation-container">
+    <!-- Header -->
+    <header>
+      <div class="logo-container">
+        <div class="logo-icon"></div>
+        <div class="logo-text">Reso<span>Scan</span></div>
+      </div>
+      <div class="deck-info" id="slide-index">Slide 1 of 8</div>
+    </header>
+
+    <!-- Slides Wrapper -->
+    <main class="slides-wrapper">
+
+      <!-- SLIDE 1: TITLE SLIDE -->
+      <section class="slide active" id="slide-1">
+        <div class="slide-grid" style="grid-template-cols: 1.2fr 0.8fr;">
+          <div>
+            <span class="badge badge-accent">Team ForgeX · UNISYS 2026</span>
+            <h1 style="margin-top: 15px;">ResoScan: Non-Invasive <span class="highlight">Biomechanical Diagnostics</span> via Resonant Modal Spectroscopy</h1>
+            <p class="lead" style="font-size: 18px; margin-bottom: 24px;">Bridging the Structure-Function Gap in Orthopedic Tibia Recovery</p>
+            
+            <div style="border-top: 1px solid var(--line); padding-top: 20px;">
+              <span class="badge" style="color: var(--text-muted); font-size: 10px; margin-bottom: 8px; display: inline-block;">Project Guide</span>
+              <div style="font-weight: 600; font-size: 15px;">Dr. Sowmya B. J.</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Associate Professor, Dept. of AI & Data Science, MSRIT</div>
+            </div>
+          </div>
+
+          <div class="team-grid">
+            <div class="team-member">
+              <div class="team-member-name">Yashas N</div>
+              <div class="team-member-dept">AI & Data Science</div>
+              <div class="team-member-inst">MSRIT</div>
+            </div>
+            <div class="team-member">
+              <div class="team-member-name">Jeeth B. Kataria</div>
+              <div class="team-member-dept">AI & Data Science</div>
+              <div class="team-member-inst">MSRIT</div>
+            </div>
+            <div class="team-member">
+              <div class="team-member-name">Naveen G. Patil</div>
+              <div class="team-member-dept">CSE (AI & ML)</div>
+              <div class="team-member-inst">MSRIT</div>
+            </div>
+            <div class="team-member">
+              <div class="team-member-name">Aditya Sarap</div>
+              <div class="team-member-dept">ETE Dept.</div>
+              <div class="team-member-inst">MSRIT</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: THE PROBLEM -->
+      <section class="slide" id="slide-2">
+        <h2>The Clinical Problem</h2>
+        <p class="lead">Orthopedic surgeons currently make critical weight-bearing decisions blindly due to massive gaps in diagnostic toolsets.</p>
+        
+        <div class="slide-grid" style="grid-template-cols: 1fr 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-title" style="color: var(--danger);">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger)"></span>
+              X-Ray Limitations
+            </div>
+            <div class="card-text">
+              X-Rays only show mineral deposits (calcium), not actual mechanical strength. A bone can regain full mechanical load-bearing capacity weeks before visual signs appear on X-Rays.
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-title" style="color: var(--caution);">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--caution)"></span>
+              Subjective Decisions
+            </div>
+            <div class="card-text">
+              Surgeons rely on qualitative feel, manual palpation, and static timeline calculations, leading to high variance in recovery rates and delayed returns to work.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="color: var(--danger);">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger)"></span>
+              Complications & Cost
+            </div>
+            <div class="card-text">
+              10-15% of long-bone fractures suffer from delayed union or non-union. Detecting this late results in highly expensive secondary revision surgeries.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: OUR NICHE: WHY THE TIBIA? -->
+      <section class="slide" id="slide-3">
+        <h2>Target Niche: Tibia Fractures</h2>
+        <p class="lead">We have prioritized the tibia as our primary clinical niche due to its unique anatomical characteristics and clinical high-stakes.</p>
+        
+        <div class="slide-grid">
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card" style="padding: 20px;">
+              <div class="card-title">Anatomical Accessibility</div>
+              <div class="card-text">
+                The tibia is highly superficial (located directly under the skin along the shin). This minimizes acoustic attenuation from surrounding muscle tissue, enabling highly clean frequency sweeps.
+              </div>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+              <div class="card-title">High Rate of Non-Union</div>
+              <div class="card-text">
+                Because of limited blood supply in the distal third, the tibia has one of the highest rates of delayed and non-union fractures of any long bone in the human body.
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card" style="padding: 20px;">
+              <div class="card-title">Critical Load-Bearing Weight Decisions</div>
+              <div class="card-text">
+                As the primary load-bearing bone of the lower leg, deciding exactly when a patient can transition from crutches to full weight-bearing is crucial to prevent hardware failure.
+              </div>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+              <div class="card-title">Expandable Tech Stack</div>
+              <div class="card-text">
+                Solving for the tibia establishes a validated baseline framework that can be easily calibrated for other superficial bones (Clavicle, Ulna, Radius).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: THE SOLUTION -->
+      <section class="slide" id="slide-4">
+        <h2>The ResoScan Solution</h2>
+        <p class="lead">Non-invasive diagnostic device that listens to the structural resonance of the healing bone.</p>
+        
+        <div class="slide-grid">
+          <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="display:flex; gap:15px; align-items:start;">
+              <div style="font-family:'JetBrains Mono'; color:var(--accent); font-size:18px; font-weight:700;">01</div>
+              <div>
+                <h4 style="font-weight:600; font-size:16px; margin-bottom:4px;">Direct Physical Measurement</h4>
+                <p style="font-size:14px; color:var(--text-muted);">Measures stiffness (Young's Modulus) directly via mechanical vibrations rather than looking at shadow-casting X-rays.</p>
+              </div>
+            </div>
+            
+            <div style="display:flex; gap:15px; align-items:start;">
+              <div style="font-family:'JetBrains Mono'; color:var(--accent); font-size:18px; font-weight:700;">02</div>
+              <div>
+                <h4 style="font-weight:600; font-size:16px; margin-bottom:4px;">Zero Ionizing Radiation</h4>
+                <p style="font-size:14px; color:var(--text-muted);">Completely safe for frequent clinical scans, allowing bi-weekly tracking of healing progression.</p>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:15px; align-items:start;">
+              <div style="font-family:'JetBrains Mono'; color:var(--accent); font-size:18px; font-weight:700;">03</div>
+              <div>
+                <h4 style="font-weight:600; font-size:16px; margin-bottom:4px;">AI-Powered Predictions</h4>
+                <p style="font-size:14px; color:var(--text-muted);">Proprietary AI models predict the exact day a patient can safely discard crutches based on dynamic stiffness index trendlines.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="resonance-wave-demo">
+            <svg viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid Lines -->
+              <line x1="40" y1="20" x2="40" y2="180" stroke="#1f2937" stroke-dasharray="4 4" />
+              <line x1="120" y1="20" x2="120" y2="180" stroke="#1f2937" stroke-dasharray="4 4" />
+              <line x1="200" y1="20" x2="200" y2="180" stroke="#1f2937" stroke-dasharray="4 4" />
+              <line x1="280" y1="20" x2="280" y2="180" stroke="#1f2937" stroke-dasharray="4 4" />
+              <line x1="360" y1="20" x2="360" y2="180" stroke="#1f2937" stroke-dasharray="4 4" />
+              
+              <!-- Frequency sweep path -->
+              <path d="M 40 160 Q 120 160 200 130 T 280 40 T 360 160" stroke="#1f2937" stroke-width="2" />
+              <!-- Highlighted peak curve -->
+              <path d="M 40 160 C 180 160 240 30 280 40 C 300 45 320 160 360 160" stroke="url(#gradient)" stroke-width="3" />
+              
+              <!-- Indicator circle at resonance peak -->
+              <circle cx="280" cy="40" r="6" fill="#0ea5e9" />
+              <text x="290" y="35" fill="#0ea5e9" font-family="JetBrains Mono" font-size="10">fn = 762 Hz (Stiff/Healed)</text>
+              <text x="180" y="120" fill="#ef4444" font-family="JetBrains Mono" font-size="10">fn = 335 Hz (Fractured)</text>
+
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#ef4444" />
+                  <stop offset="50%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#0ea5e9" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: BIO-MECHANICAL MECHANISM -->
+      <section class="slide" id="slide-5">
+        <h2>How It Works: Science & Physics</h2>
+        <p class="lead">Structural frequency response shifts upward as fracture margins bridge and mechanical stiffness increases.</p>
+        
+        <div class="slide-grid" style="grid-template-cols: 1fr 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div style="font-family:'JetBrains Mono'; font-weight:700; color:var(--accent); font-size:24px; margin-bottom:12px;">01</div>
+            <div class="card-title">Controlled Impulse</div>
+            <div class="card-text">
+              A precise mechanical impulse is applied to the proximal end of the tibia (tibial tuberosity) using an automated low-frequency actuator sweep (20 – 1100 Hz).
+            </div>
+          </div>
+          
+          <div class="card">
+            <div style="font-family:'JetBrains Mono'; font-weight:700; color:var(--accent); font-size:24px; margin-bottom:12px;">02</div>
+            <div class="card-title">Resonance Detection</div>
+            <div class="card-text">
+              A high-sensitivity sensor placed on the distal end (medial malleolus) records the transmitted signal, filtering out soft-tissue attenuation through custom DSP algorithms.
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-family:'JetBrains Mono'; font-weight:700; color:var(--accent); font-size:24px; margin-bottom:12px;">03</div>
+            <div class="card-title">Peak Extraction</div>
+            <div class="card-text">
+              The resonance peak (fundamental natural frequency, f₀) shifts from ~300 Hz (fractured/loose) to ~800 Hz (healed/stiff), reflecting the bone's structural restoration.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: TECHNICAL STACK -->
+      <section class="slide" id="slide-6">
+        <h2>Technical & Software Architecture</h2>
+        <p class="lead">An end-to-end integration of medical-grade hardware and modern cloud analytics.</p>
+        
+        <div class="slide-grid">
+          <div class="card">
+            <div class="card-title">Hardware Setup (IoT Dev Kit)</div>
+            <ul style="color:var(--text-muted); font-size:14px; line-height:1.7; padding-left:20px;">
+              <li>Microcontroller unit processing real-time sweeps</li>
+              <li>Acoustic sensors positioned with custom mechanical fixtures</li>
+              <li>Solenoid/Piezo-actuated standardized strike mechanism</li>
+              <li>Low BOM cost (under ₹8,000) for high-scale deployment</li>
+            </ul>
+          </div>
+          
+          <div class="card">
+            <div class="card-title">Software & Cloud Engine</div>
+            <ul style="color:var(--text-muted); font-size:14px; line-height:1.7; padding-left:20px;">
+              <li>Next.js dashboard for orthopedic surgeons</li>
+              <li>Real-time FFT algorithms and PSD curve fitting</li>
+              <li>Predictive models calculating days-to-walk timeline</li>
+              <li>FHIR/HL7 standard compliant record architecture</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: KEY CLINICAL VALUE METRICS -->
+      <section class="slide" id="slide-7">
+        <h2>Clinical Metrics & Value Proposition</h2>
+        <p class="lead">ResoScan directly addresses safety, speed, accuracy, and healthcare costs.</p>
+        
+        <div class="slide-grid" style="grid-template-cols: 1fr 1fr 1fr 1fr; gap: 15px;">
+          <div class="card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--accent); margin-bottom: 5px;">95%</div>
+            <div class="card-title" style="justify-content: center; font-size: 14px;">Prediction Accuracy</div>
+            <div class="card-text" style="font-size: 12px;">AI models match or exceed qualitative orthopedic assessments.</div>
+          </div>
+
+          <div class="card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--safe); margin-bottom: 5px;">20 s</div>
+            <div class="card-title" style="justify-content: center; font-size: 14px;">Scan Speed</div>
+            <div class="card-text" style="font-size: 12px;">Rapid testing compared to multi-minute radiographic imaging.</div>
+          </div>
+
+          <div class="card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--caution); margin-bottom: 5px;">₹8k</div>
+            <div class="card-title" style="justify-content: center; font-size: 14px;">BOM Cost</div>
+            <div class="card-text" style="font-size: 12px;">Accessible to rural clinics without specialized radiology labs.</div>
+          </div>
+
+          <div class="card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--danger); margin-bottom: 5px;">0.0</div>
+            <div class="card-title" style="justify-content: center; font-size: 14px;">Radiation Dosage</div>
+            <div class="card-text" style="font-size: 12px;">Safe for pregnant patients and children with repeat scans.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: THE FUTURE SCOPE -->
+      <section class="slide" id="slide-8">
+        <h2>Future Scope & Roadmap</h2>
+        <p class="lead">Evolving ResoScan from a Tibia-first focus into an all-encompassing biomechanical clinic tool.</p>
+        
+        <div class="slide-grid">
+          <div class="card">
+            <div class="card-title">Clinical Expansion</div>
+            <div class="card-text">
+              Calibrate and deploy algorithms to other superficial bone areas (such as the Clavicle, Fibula, Ulna, and Radius). Expand machine learning datasets through hospital partnerships for robust edge case detection.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Commercialization & Telemedicine</div>
+            <div class="card-text">
+              Develop a handheld, battery-powered version of the device enabling patients to scan their legs from home. Relayed data feeds straight into cloud portals, triggering warnings for orthopedists.
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="slide-controls">
+        <button class="control-btn" id="prev-btn">&larr;</button>
+        <button class="control-btn" id="next-btn">&rarr;</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const slideIndexEl = document.getElementById('slide-index');
+    const progressFill = document.getElementById('progress-fill');
+    
+    let currentSlide = 0;
+
+    function updateSlide() {
+      slides.forEach((slide, index) => {
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+      
+      slideIndexEl.textContent = `Slide ${currentSlide + 1} of ${slides.length}`;
+      progressFill.style.width = `${((currentSlide + 1) / slides.length) * 100}%`;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        if (currentSlide < slides.length - 1) {
+          currentSlide++;
+          updateSlide();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (currentSlide > 0) {
+          currentSlide--;
+          updateSlide();
+        }
+      }
+    });
+
+    // Initialize progress bar
+    updateSlide();
+  </script>
+</body>
+</html>
